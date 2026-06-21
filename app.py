@@ -372,15 +372,15 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
 
 # ─── Constants — must match 3A_final.ipynb DB builder exactly ────────────────
 
-SR               = 22050
-NPERSEG          = int(0.05 * SR)          # 1102 samples  (~50 ms window)
-NOVERLAP         = NPERSEG // 2            # 551
+SR               = 9600
+NPERSEG          = int(0.05 * SR)          # 480 samples  (~50 ms window)
+NOVERLAP         = NPERSEG // 2            # 240
 FREQ_CUTOFF      = 4000                    # Hz
 NEIGHBORHOOD     = (20, 20)
 PEAK_PERCENTILE  = 90
 MIN_AMPLITUDE_DB = -60.0
-FAN_VALUE        = 10
-MAX_DT           = 200
+FAN_VALUE        = 20
+MAX_DT           = 100
 MIN_DT           = 1
 CONFIDENCE_THRESHOLD = 10
 
