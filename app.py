@@ -51,6 +51,35 @@ html, body, [class*="css"] {
     font-family: 'Rajdhani', sans-serif;
 }
 
+/* ── Scanline overlay ── */
+.stApp::before {
+    content: '';
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(transparent 50%, rgba(0,0,0,0.03) 50%);
+    background-size: 100% 4px;
+    pointer-events: none; z-index: 9998;
+    animation: scanline 8s linear infinite;
+}
+@keyframes scanline {
+    0%   { background-position: 0 0; }
+    100% { background-position: 0 100vh; }
+}
+
+/* ── Moving scan sweep ── */
+.stApp::after {
+    content: '';
+    position: fixed; top: -100%; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.18), transparent);
+    pointer-events: none; z-index: 9999;
+    animation: sweep 6s linear infinite;
+}
+@keyframes sweep {
+    0%   { top: -2px; opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+}
+
 .stApp {
     background:
         radial-gradient(ellipse 90% 40% at 50% 0%, rgba(220,38,38,0.08), transparent),
@@ -59,8 +88,61 @@ html, body, [class*="css"] {
         linear-gradient(180deg, #08080f 0%, #0a0a14 100%);
 }
 
+/* ── Hex particle canvas ── */
+#hex-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; opacity: 0.18;
+}
+
 #MainMenu, footer, header { visibility: hidden; }
-.block-container { padding-top: 1.2rem; padding-bottom: 3rem; max-width: 1140px; }
+.block-container { padding-top: 1.2rem; padding-bottom: 3rem; max-width: 1140px; position: relative; z-index: 1; }
+
+/* ── Boot screen ── */
+#boot-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #04040a;
+    z-index: 99999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    /* CSS-only auto-hide: fires once, ~3.4s in, no JS required to disappear */
+    animation: boot-auto-hide 0.01s linear 3.4s forwards;
+}
+@keyframes boot-auto-hide {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+.boot-logo {
+    font-family: 'Orbitron', sans-serif; font-size: 2.8rem; font-weight: 900;
+    color: #fef2f2; letter-spacing: 0.1em; margin-bottom: 0.2rem;
+    text-shadow: 0 0 40px rgba(220,38,38,0.7);
+}
+.boot-logo span { color: #ef4444; }
+.boot-sub {
+    font-size: 0.65rem; letter-spacing: 0.35em; color: #00e5ff;
+    margin-bottom: 2.5rem; opacity: 0.8;
+}
+.boot-lines { width: 380px; }
+.boot-line {
+    font-size: 0.72rem; letter-spacing: 0.12em;
+    color: #4a4a6a; margin-bottom: 0.45rem;
+    white-space: nowrap; overflow: hidden;
+    border-right: 2px solid transparent;
+}
+.boot-line.done  { color: #00e5ff; }
+.boot-line.done::after  { content: ' ✓'; color: #22c55e; }
+.boot-line.typing { color: #f59e0b; border-right-color: #f59e0b; animation: blink-cursor 0.6s step-end infinite; }
+@keyframes blink-cursor { 50% { border-right-color: transparent; } }
+.boot-bar-wrap {
+    width: 380px; height: 3px;
+    background: rgba(255,255,255,0.06); border-radius: 99px;
+    margin-top: 2rem; overflow: hidden;
+}
+.boot-bar-fill {
+    height: 100%; width: 0%; border-radius: 99px;
+    background: linear-gradient(90deg, #dc2626, #f59e0b, #00e5ff);
+    transition: width 0.3s ease;
+}
 
 /* ── Hero ── */
 .hero {
@@ -75,28 +157,112 @@ html, body, [class*="css"] {
     margin-top: 2rem;
     opacity: 0.5;
 }
+
+/* ── Arc Reactor ── */
 .reactor-wrap {
-    display: flex; justify-content: center; margin-bottom: 1.2rem;
+    display: flex; justify-content: center; margin-bottom: 1.4rem;
 }
-.reactor-ring {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    border: 2px solid #dc2626;
-    box-shadow: 0 0 22px 3px rgba(220,38,38,0.55),
-                inset 0 0 18px rgba(220,38,38,0.4),
-                0 0 60px rgba(220,38,38,0.15);
+.reactor-outer {
+    position: relative; width: 140px; height: 140px;
     display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle, #fca5a5 0%, #dc2626 40%, #1a0505 100%);
-    animation: pulse-reactor 3s ease-in-out infinite;
 }
-@keyframes pulse-reactor {
-    0%, 100% { box-shadow: 0 0 22px 3px rgba(220,38,38,0.55), inset 0 0 18px rgba(220,38,38,0.4); }
-    50%       { box-shadow: 0 0 34px 6px rgba(220,38,38,0.8),  inset 0 0 26px rgba(220,38,38,0.6); }
+
+/* power ring */
+.reactor-power-ring {
+    position: absolute; width: 140px; height: 140px; border-radius: 50%;
+    border: 2px solid rgba(220,38,38,0.25);
+    box-shadow: 0 0 8px rgba(220,38,38,0.15);
 }
+.reactor-power-ring::before {
+    content: '';
+    position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #dc2626;
+    border-right-color: #f59e0b;
+    animation: spin-power 3s linear infinite;
+}
+@keyframes spin-power { to { transform: rotate(360deg); } }
+
+/* radar sweep */
+.reactor-radar {
+    position: absolute; width: 110px; height: 110px; border-radius: 50%;
+    border: 1px solid rgba(0,229,255,0.15);
+    overflow: hidden;
+}
+.reactor-radar::after {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    width: 55px; height: 1px;
+    background: linear-gradient(90deg, rgba(0,229,255,0.8), transparent);
+    transform-origin: left center;
+    animation: radar-sweep 2.5s linear infinite;
+}
+@keyframes radar-sweep { to { transform: rotate(360deg); } }
+
+/* segment ring */
+.reactor-segments {
+    position: absolute; width: 90px; height: 90px; border-radius: 50%;
+    animation: spin-segments 8s linear infinite reverse;
+}
+.reactor-segments svg {
+    width: 100%; height: 100%;
+}
+
+/* inner ring */
+.reactor-inner-ring {
+    position: absolute; width: 68px; height: 68px; border-radius: 50%;
+    border: 1.5px solid rgba(0,229,255,0.5);
+    box-shadow: 0 0 12px rgba(0,229,255,0.3), inset 0 0 12px rgba(0,229,255,0.1);
+    animation: pulse-inner 2s ease-in-out infinite;
+}
+@keyframes pulse-inner {
+    0%, 100% { box-shadow: 0 0 12px rgba(0,229,255,0.3), inset 0 0 12px rgba(0,229,255,0.1); }
+    50%       { box-shadow: 0 0 22px rgba(0,229,255,0.6), inset 0 0 20px rgba(0,229,255,0.25); }
+}
+
+/* core */
 .reactor-core {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: radial-gradient(circle, #ffffff 0%, #fef08a 50%, #f59e0b 100%);
-    box-shadow: 0 0 16px 6px rgba(254,240,138,0.7);
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #a5f3fc 35%, #00e5ff 65%, #0e7490 100%);
+    box-shadow: 0 0 20px 6px rgba(0,229,255,0.7), 0 0 50px rgba(0,229,255,0.3);
+    animation: pulse-core 2s ease-in-out infinite, surge 5s ease-in-out infinite;
+    z-index: 2;
+}
+@keyframes pulse-core {
+    0%, 100% { box-shadow: 0 0 20px 6px rgba(0,229,255,0.7), 0 0 50px rgba(0,229,255,0.3); }
+    50%       { box-shadow: 0 0 30px 10px rgba(0,229,255,0.9), 0 0 80px rgba(0,229,255,0.5); }
+}
+@keyframes surge {
+    0%, 80%, 100% { filter: brightness(1); }
+    85%            { filter: brightness(2.5); }
+    90%            { filter: brightness(1); }
+    93%            { filter: brightness(2); }
+}
+@keyframes spin-segments { to { transform: rotate(360deg); } }
+
+/* arc sparks */
+.arc-spark {
+    position: absolute; width: 2px; border-radius: 99px;
+    background: linear-gradient(180deg, rgba(0,229,255,0.9), transparent);
+    transform-origin: bottom center;
+    animation: spark-flash 5s ease-in-out infinite;
+    opacity: 0;
+}
+@keyframes spark-flash {
+    0%, 70%, 100% { opacity: 0; height: 0px; }
+    75%            { opacity: 1; height: 18px; }
+    80%            { opacity: 0; height: 0px; }
+    84%            { opacity: 0.7; height: 12px; }
+    88%            { opacity: 0; height: 0px; }
+}
+
+/* readout */
+.reactor-readout {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 0.2em;
+    color: rgba(0,229,255,0.45); margin-top: 0.6rem;
+    text-align: center; text-transform: uppercase;
 }
 
 .hero-eyebrow {
@@ -111,6 +277,12 @@ html, body, [class*="css"] {
     color: #fef2f2; line-height: 1.1; margin: 0 0 0.4rem;
     letter-spacing: 0.06em;
     text-shadow: 0 0 32px rgba(220,38,38,0.5), 0 0 80px rgba(220,38,38,0.2);
+    cursor: default;
+    transition: text-shadow 0.2s;
+}
+.hero-title:hover {
+    text-shadow: 0 0 8px rgba(220,38,38,0.9), 0 0 40px rgba(220,38,38,0.6),
+                 2px 0 0 rgba(0,229,255,0.4), -2px 0 0 rgba(220,38,38,0.4);
 }
 .hero-title .j { color: #ef4444; }
 .hero-acronym {
@@ -134,7 +306,7 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
 [data-baseweb="tab-highlight"] { background-color: #dc2626 !important; }
 [data-baseweb="tab-border"]    { background-color: rgba(220,38,38,0.12) !important; }
 
-/* ── Section header ── */
+/* ── Section header with corner brackets ── */
 .sec-hdr {
     display: flex; align-items: center; gap: 0.75rem;
     margin: 2rem 0 1rem;
@@ -148,6 +320,11 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
     font-size: 0.62rem; letter-spacing: 0.28em;
     color: #00e5ff; text-transform: uppercase; font-weight: 700;
     white-space: nowrap;
+}
+.sec-hdr-bracket {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem; color: rgba(220,38,38,0.5);
+    line-height: 1;
 }
 
 /* ── Metric cards ── */
@@ -186,15 +363,46 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
     color: #00e5ff; letter-spacing: 0.12em; opacity: 0.75;
 }
 
-/* ── Upload area ── */
+/* ── Upload area — HUD reticle ── */
 [data-testid="stFileUploader"] {
     background: rgba(0,229,255,0.02) !important;
-    border: 2px dashed rgba(0,229,255,0.25) !important;
-    border-radius: 8px !important;
+    border: none !important;
+    border-radius: 0px !important;
+    position: relative;
 }
-[data-testid="stFileUploader"]:hover {
-    border-color: rgba(0,229,255,0.5) !important;
+.hud-uploader-wrap {
+    position: relative; padding: 1.2rem;
+    background: rgba(0,229,255,0.015);
 }
+.hud-uploader-wrap::before,
+.hud-uploader-wrap::after {
+    content: '';
+    position: absolute; width: 18px; height: 18px;
+    border-color: #00e5ff; border-style: solid; opacity: 0.6;
+}
+.hud-uploader-wrap::before {
+    top: 0; left: 0;
+    border-width: 2px 0 0 2px;
+}
+.hud-uploader-wrap::after {
+    bottom: 0; right: 0;
+    border-width: 0 2px 2px 0;
+}
+.hud-corner-tr, .hud-corner-bl {
+    position: absolute; width: 18px; height: 18px;
+    border-color: #00e5ff; border-style: solid; opacity: 0.6;
+    pointer-events: none;
+}
+.hud-corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+.hud-corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+.awaiting-input {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 0.3em;
+    color: #00e5ff; text-align: center;
+    margin-top: 0.5rem; text-transform: uppercase;
+    animation: blink-await 1.4s step-end infinite;
+}
+@keyframes blink-await { 50% { opacity: 0; } }
 
 /* ── Buttons ── */
 .stButton button, .stDownloadButton button {
@@ -208,6 +416,54 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
 .stButton button:hover, .stDownloadButton button:hover {
     box-shadow: 0 0 28px rgba(220,38,38,0.6) !important;
     border-color: #fbbf24 !important;
+}
+
+/* ── Song cards — fixed height HUD panels ── */
+.song-card {
+    background: linear-gradient(135deg, #0d0d1a 0%, #0a0a12 100%);
+    border: 1px solid rgba(220,38,38,0.18);
+    border-left: 3px solid;
+    border-radius: 4px;
+    padding: 0.55rem 0.7rem 0.55rem 0.8rem;
+    height: 54px;
+    display: flex; align-items: center; gap: 0.5rem;
+    cursor: pointer; margin-bottom: 0.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    overflow: hidden; position: relative;
+}
+.song-card:hover {
+    box-shadow: 0 0 14px rgba(220,38,38,0.25);
+    border-color: rgba(245,158,11,0.5);
+}
+.song-card-idx {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.52rem; color: #57534e;
+    min-width: 26px; letter-spacing: 0.05em;
+}
+.song-card-name {
+    font-family: 'Exo 2', sans-serif; font-size: 0.82rem;
+    font-weight: 600; color: #e7e5e4; flex: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.song-card-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ── Song card expander override ── */
+[data-testid="stExpander"] details summary {
+    list-style: none;
+}
+[data-testid="stExpander"] details summary::-webkit-details-marker {
+    display: none;
+}
+.song-card-summary {
+    background: linear-gradient(135deg, #0d0d1a 0%, #0a0a12 100%);
+    border-left: 3px solid;
+    border-radius: 4px;
+    padding: 0.55rem 0.7rem 0.55rem 0.8rem;
+    height: 54px;
+    display: flex; align-items: center; gap: 0.5rem;
+    overflow: hidden;
 }
 
 /* ── Candidate scores ── */
@@ -366,7 +622,188 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.65rem; margin-bottom: 0.6rem;
 }
+
+/* ── Confidence power meter ── */
+.power-meter-wrap {
+    margin-top: 1rem;
+}
+.power-meter-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.22em; color: #00e5ff; text-transform: uppercase;
+    margin-bottom: 0.4rem;
+}
+.power-meter-segments {
+    display: flex; gap: 3px;
+}
+.power-seg {
+    height: 14px; flex: 1; border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+    transition: background 0.1s;
+}
+.power-seg.active-low    { background: #dc2626; box-shadow: 0 0 6px rgba(220,38,38,0.6); }
+.power-seg.active-mid    { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.6); }
+.power-seg.active-high   { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+.power-pct {
+    font-family: 'Orbitron', monospace; font-size: 0.75rem;
+    color: #fef2f2; margin-top: 0.35rem; letter-spacing: 0.1em;
+}
+
+/* ── Typewriter match song ── */
+.match-song-typewriter {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 900;
+    color: #fef2f2; line-height: 1.15;
+    text-shadow: 0 0 24px rgba(220,38,38,0.4);
+    border-right: 3px solid #f59e0b;
+    white-space: nowrap; overflow: hidden;
+    display: inline-block;
+}
+
+/* ── Status bar ── */
+.status-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(4,4,10,0.95);
+    border-top: 1px solid rgba(220,38,38,0.2);
+    padding: 0.3rem 1.5rem;
+    display: flex; align-items: center; gap: 1.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 0.15em;
+    color: #57534e; text-transform: uppercase;
+    z-index: 9000;
+}
+.status-bar-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34,197,94,0.8);
+    animation: pulse-status 2s ease-in-out infinite;
+    display: inline-block; margin-right: 0.3rem;
+}
+@keyframes pulse-status {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+.status-bar-item { color: #4a4a6a; }
+.status-bar-item span { color: #00e5ff; }
 </style>
+""", unsafe_allow_html=True)
+
+
+# ─── Boot sequence + ambient effects ──────────────────────────────────────────
+# Boot screen is only emitted into the page on the very first run of this
+# session (tracked via st.session_state, which is reliable Python-side state —
+# unlike sessionStorage/getElementById, which can fail to reach elements that
+# Streamlit renders into a sandboxed iframe). On reruns we skip the boot block
+# entirely, so it never re-plays and never gets "stuck" waiting on JS that
+# can't find its target element.
+
+if "jarvis_booted" not in st.session_state:
+    st.session_state.jarvis_booted = True
+    st.markdown("""
+    <div id="boot-screen">
+        <div class="boot-logo"><span>J</span>.A.R.V.I.S</div>
+        <div class="boot-sub">STARK INDUSTRIES · AUDIO IDENTIFICATION SYSTEM</div>
+        <div class="boot-lines">
+            <div class="boot-line" id="bl0">INITIALIZING AUDIO CORE</div>
+            <div class="boot-line" id="bl1">LOADING FINGERPRINT DATABASE</div>
+            <div class="boot-line" id="bl2">CALIBRATING FREQUENCY FILTERS</div>
+            <div class="boot-line" id="bl3">NEURAL PATTERN MATCHING ONLINE</div>
+            <div class="boot-line" id="bl4">JARVIS SYSTEMS NOMINAL</div>
+        </div>
+        <div class="boot-bar-wrap"><div class="boot-bar-fill" id="boot-bar"></div></div>
+    </div>
+
+    <script>
+    (function() {
+        var lines  = [0,1,2,3,4];
+        var delays = [400, 900, 1450, 2000, 2550];
+        var bar    = document.getElementById('boot-bar');
+        lines.forEach(function(idx) {
+            setTimeout(function() {
+                var el = document.getElementById('bl' + idx);
+                if (!el) return;
+                el.classList.add('typing');
+                setTimeout(function() {
+                    el.classList.remove('typing');
+                    el.classList.add('done');
+                }, 420);
+                if (bar) bar.style.width = ((idx + 1) / lines.length * 100) + '%';
+            }, delays[idx]);
+        });
+    })();
+    </script>
+    """, unsafe_allow_html=True)
+
+st.markdown("""
+<canvas id="hex-canvas"></canvas>
+
+<div class="status-bar">
+    <span><span class="status-bar-dot"></span></span>
+    <span class="status-bar-item">JARVIS <span>v1.0</span></span>
+    <span class="status-bar-item">STATUS <span>ONLINE</span></span>
+    <span class="status-bar-item">SYSTEM <span>NOMINAL</span></span>
+    <span class="status-bar-item">STARK INDUSTRIES AUDIO ID</span>
+</div>
+
+<script>
+(function() {
+    // ── Hex particle canvas ──
+    var canvas = document.getElementById('hex-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    var HEX_R = 14, COLS, ROWS, particles = [];
+    function hexW(r) { return Math.sqrt(3) * r; }
+    function hexH(r) { return 2 * r; }
+
+    function buildGrid() {
+        particles = [];
+        COLS = Math.ceil(canvas.width  / (hexW(HEX_R) * 1.05)) + 2;
+        ROWS = Math.ceil(canvas.height / (hexH(HEX_R) * 0.78)) + 2;
+        for (var r = 0; r < ROWS; r++) {
+            for (var c = 0; c < COLS; c++) {
+                var x = c * hexW(HEX_R) * 1.05 + (r % 2) * hexW(HEX_R) * 0.525;
+                var y = r * hexH(HEX_R) * 0.78;
+                particles.push({ x: x, y: y, alpha: Math.random() * 0.4, speed: 0.003 + Math.random() * 0.006, phase: Math.random() * Math.PI * 2 });
+            }
+        }
+    }
+
+    function drawHex(x, y, r, alpha) {
+        ctx.beginPath();
+        for (var i = 0; i < 6; i++) {
+            var angle = Math.PI / 180 * (60 * i - 30);
+            var px = x + r * Math.cos(angle);
+            var py = y + r * Math.sin(angle);
+            i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(0,229,255,' + alpha + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+    }
+
+    var t = 0;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        t += 0.016;
+        particles.forEach(function(p) {
+            var a = (Math.sin(t * p.speed * 60 + p.phase) + 1) / 2 * p.alpha;
+            drawHex(p.x, p.y, HEX_R - 1, a);
+        });
+        requestAnimationFrame(animate);
+    }
+
+    buildGrid();
+    animate();
+
+    window.addEventListener('resize', function() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        buildGrid();
+    });
+})();
+</script>
 """, unsafe_allow_html=True)
 
 
@@ -800,15 +1237,46 @@ def render_match_box(winner, scores):
         top_score = scores[0][1]
         runner_up = scores[1][1] if len(scores) > 1 else 1
         ratio     = top_score / max(runner_up, 1)
+        # confidence as % of ratio (cap at 100)
+        conf_pct  = min(100, int((ratio / 10) * 100))
+        n_segs    = 20
+        active    = int(conf_pct / 100 * n_segs)
+        segs_html = ""
+        for s in range(n_segs):
+            if s < active:
+                cls = "active-low" if s < 6 else ("active-mid" if s < 13 else "active-high")
+            else:
+                cls = ""
+            segs_html += f'<div class="power-seg {cls}"></div>'
+        song_display = winner.replace('_', ' ')
+        uid = f"tw_{abs(hash(winner)) % 99999}"
         st.markdown(f"""
         <div class="match-box">
             <div class="match-jarvis">▲ J.A.R.V.I.S  RESPONSE</div>
             <div class="match-phrase">Found it, Boss.</div>
-            <div class="match-song">{winner.replace('_', ' ')}</div>
+            <div id="{uid}" class="match-song-typewriter"></div>
             <div class="match-meta">
-                alignment score {top_score:,} &nbsp;·&nbsp; {ratio:.0f}× the runner-up
+                alignment score {top_score:,} &nbsp;·&nbsp; {ratio:.1f}× the runner-up
             </div>
-        </div>""", unsafe_allow_html=True)
+            <div class="power-meter-wrap">
+                <div class="power-meter-label">Confidence</div>
+                <div class="power-meter-segments">{segs_html}</div>
+                <div class="power-pct">{conf_pct}%</div>
+            </div>
+        </div>
+        <script>
+        (function(){{
+            var el = document.getElementById("{uid}");
+            if (!el) return;
+            var txt = "{song_display}";
+            var i = 0;
+            el.textContent = "";
+            var t = setInterval(function(){{
+                if (i < txt.length) {{ el.textContent += txt[i++]; }}
+                else {{ clearInterval(t); el.style.borderRight = "none"; }}
+            }}, 60);
+        }})();
+        </script>""", unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="no-match-box">
@@ -843,9 +1311,36 @@ def tab_library(db_paired, db_constellation):
     st.markdown("""
     <div class="hero">
         <div class="reactor-wrap">
-            <div class="reactor-ring"><div class="reactor-core"></div></div>
+            <div class="reactor-outer">
+                <div class="reactor-power-ring"></div>
+                <div class="reactor-radar"></div>
+                <div class="reactor-segments">
+                    <svg viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="translate(45,45)">
+                            <!-- 6 triangle segments -->
+                            <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8"/>
+                            <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(60)"/>
+                            <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(120)"/>
+                            <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(180)"/>
+                            <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(240)"/>
+                            <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(300)"/>
+                            <!-- outer ring -->
+                            <circle r="38" fill="none" stroke="rgba(220,38,38,0.4)" stroke-width="1"/>
+                            <circle r="28" fill="none" stroke="rgba(245,158,11,0.2)" stroke-width="0.5" stroke-dasharray="4 4"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="reactor-inner-ring"></div>
+                <!-- arc sparks at 4 positions -->
+                <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(0deg) translateY(-34px);animation-delay:0s;"></div>
+                <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(90deg) translateY(-34px);animation-delay:1.2s;"></div>
+                <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(180deg) translateY(-34px);animation-delay:2.4s;"></div>
+                <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(270deg) translateY(-34px);animation-delay:3.6s;"></div>
+                <div class="reactor-core"></div>
+            </div>
         </div>
-        <div class="hero-eyebrow">EE200 · Signals, Systems &amp; Networks · Course Project</div>
+        <div class="reactor-readout">ARC REACTOR · OUTPUT: 3.00 GJ · STABLE</div>
+        <div class="hero-eyebrow" style="margin-top:0.8rem;">EE200 · Signals, Systems &amp; Networks · Course Project</div>
         <div class="hero-title"><span class="j">J</span>.A.R.V.I.S</div>
         <div class="hero-acronym">Just A Rather Very Intelligent Sound-identifier</div>
         <div class="hero-tagline">"JARVIS, identify that track."</div>
@@ -879,20 +1374,34 @@ def tab_library(db_paired, db_constellation):
         )
 
     # ── Indexed library ──────────────────────────────────────────────────────
-    sec_hdr("⟁ Indexed library — expand a track to inspect its constellation")
+    sec_hdr("⟁ Indexed library — click a track to inspect its constellation")
 
     cols = st.columns(4)
     for i, (name, n_hash) in enumerate(songs):
-        color = PALETTE[i % len(PALETTE)]
+        color      = PALETTE[i % len(PALETTE)]
+        peaks_list = db_constellation.get(name, [])
+        has_data   = bool(peaks_list)
+        dot_color  = "#22c55e" if has_data else "#3f3f46"
+        disp_name  = name.replace('_', ' ')
+        label = (
+            f'<div class="song-card-summary" style="border-left-color:{color};">'
+            f'<span class="song-card-idx">#{i+1:03d}</span>'
+            f'<span class="song-card-dot" style="background:{dot_color};'
+            f'box-shadow:0 0 6px {dot_color};"></span>'
+            f'<span class="song-card-name">{disp_name}</span>'
+            f'</div>'
+        )
         with cols[i % 4]:
-            with st.expander(f"⚡ {name.replace('_', ' ')}", expanded=False):
+            st.markdown(label, unsafe_allow_html=True)
+            with st.expander("show constellation", expanded=False):
                 st.markdown(
                     f'<div class="song-meta" style="color:{color};">'
-                    f'{n_hash:,} hashes</div>',
+                    f'{n_hash:,} hashes &nbsp;·&nbsp; '
+                    f'<span style="color:{dot_color};">{"● DATA" if has_data else "○ NO DATA"}</span>'
+                    f'</div>',
                     unsafe_allow_html=True,
                 )
-                peaks_list = db_constellation.get(name, [])
-                if peaks_list:
+                if has_data:
                     hop_s = (NPERSEG - NOVERLAP) / SR
                     dur_s = max(p[0] for p in peaks_list) * hop_s
                     st.markdown(
@@ -922,12 +1431,18 @@ def tab_identify(db_paired, db_constellation):
         <div class="page-hdr-sub">UPLOAD A CLIP · JARVIS WILL FIND IT</div>
     </div>""", unsafe_allow_html=True)
 
+    st.markdown('<div class="hud-uploader-wrap">'
+                '<div class="hud-corner-tr"></div>'
+                '<div class="hud-corner-bl"></div>', unsafe_allow_html=True)
     uploaded = st.file_uploader(
         "Drop a clip here",
         type=["wav", "mp3", "flac", "ogg", "m4a"],
         label_visibility="collapsed",
         key="identify_uploader",
     )
+    if not uploaded:
+        st.markdown('<div class="awaiting-input">▲ AWAITING INPUT</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Audio player — shown as soon as a file is dropped ───────────────────
     if uploaded:
@@ -1039,6 +1554,9 @@ def tab_batch(db_paired):
         unsafe_allow_html=True,
     )
 
+    st.markdown('<div class="hud-uploader-wrap">'
+                '<div class="hud-corner-tr"></div>'
+                '<div class="hud-corner-bl"></div>', unsafe_allow_html=True)
     files = st.file_uploader(
         "Drop clips here",
         type=["wav", "mp3", "flac", "ogg", "m4a"],
@@ -1046,6 +1564,10 @@ def tab_batch(db_paired):
         label_visibility="collapsed",
         key="batch_uploader",
     )
+    if not files:
+        st.markdown('<div class="awaiting-input">▲ AWAITING INPUT</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     run = st.button("▶ RUN BATCH", type="primary")
 
     if not (files and run):
@@ -1125,7 +1647,7 @@ def main():
         )
         return
 
-    tab1, tab2, tab3 = st.tabs(["📡  LIBRARY", "🎯  IDENTIFY", "⚡  BATCH"])
+    tab1, tab2, tab3 = st.tabs(["  DATABASE  ", "  IDENTIFY  ", "  BATCH  "])
 
     with tab1:
         tab_library(db_paired, db_constellation)
