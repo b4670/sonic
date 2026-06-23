@@ -1,6 +1,5 @@
 """
 J.A.R.V.I.S — Just A Rather Very Intelligent Sound-identifier
-EE200: Signals, Systems & Networks · Course Project
 
 Architecture:
   db_paired.pkl        → hash((f1, f2, dt)) → [(song, anchor_frame), ...]
@@ -51,33 +50,13 @@ html, body, [class*="css"] {
     font-family: 'Rajdhani', sans-serif;
 }
 
-/* ── Scanline overlay ── */
+/* ── Scanline overlay (subtle, static grid only) ── */
 .stApp::before {
     content: '';
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(transparent 50%, rgba(0,0,0,0.03) 50%);
+    background: linear-gradient(transparent 50%, rgba(0,0,0,0.025) 50%);
     background-size: 100% 4px;
     pointer-events: none; z-index: 9998;
-    animation: scanline 8s linear infinite;
-}
-@keyframes scanline {
-    0%   { background-position: 0 0; }
-    100% { background-position: 0 100vh; }
-}
-
-/* ── Moving scan sweep ── */
-.stApp::after {
-    content: '';
-    position: fixed; top: -100%; left: 0; width: 100%; height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.18), transparent);
-    pointer-events: none; z-index: 9999;
-    animation: sweep 6s linear infinite;
-}
-@keyframes sweep {
-    0%   { top: -2px; opacity: 0; }
-    5%   { opacity: 1; }
-    95%  { opacity: 1; }
-    100% { top: 100vh; opacity: 0; }
 }
 
 .stApp {
@@ -98,50 +77,29 @@ html, body, [class*="css"] {
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 1.2rem; padding-bottom: 3rem; max-width: 1140px; position: relative; z-index: 1; }
 
-/* ── Boot screen ── */
-#boot-screen {
+/* ── Viewport corner brackets ── */
+.vp-corner {
+    position: fixed; width: 28px; height: 28px;
+    border-color: rgba(0,229,255,0.35); border-style: solid;
+    pointer-events: none; z-index: 9997;
+    animation: corner-pulse 4s ease-in-out infinite;
+}
+.vp-corner.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+.vp-corner.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+.vp-corner.bl { bottom: 28px; left: 12px; border-width: 0 0 2px 2px; }
+.vp-corner.br { bottom: 28px; right: 12px; border-width: 0 2px 2px 0; }
+@keyframes corner-pulse {
+    0%, 100% { opacity: 0.35; }
+    50%       { opacity: 0.7; }
+}
+
+/* ── Diagonal HUD grid overlay ── */
+.hud-grid {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #04040a;
-    z-index: 99999;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    font-family: 'Share Tech Mono', monospace;
-    /* CSS-only auto-hide: fires once, ~3.4s in, no JS required to disappear */
-    animation: boot-auto-hide 0.01s linear 3.4s forwards;
-}
-@keyframes boot-auto-hide {
-    to { opacity: 0; visibility: hidden; pointer-events: none; }
-}
-.boot-logo {
-    font-family: 'Orbitron', sans-serif; font-size: 2.8rem; font-weight: 900;
-    color: #fef2f2; letter-spacing: 0.1em; margin-bottom: 0.2rem;
-    text-shadow: 0 0 40px rgba(220,38,38,0.7);
-}
-.boot-logo span { color: #ef4444; }
-.boot-sub {
-    font-size: 0.65rem; letter-spacing: 0.35em; color: #00e5ff;
-    margin-bottom: 2.5rem; opacity: 0.8;
-}
-.boot-lines { width: 380px; }
-.boot-line {
-    font-size: 0.72rem; letter-spacing: 0.12em;
-    color: #4a4a6a; margin-bottom: 0.45rem;
-    white-space: nowrap; overflow: hidden;
-    border-right: 2px solid transparent;
-}
-.boot-line.done  { color: #00e5ff; }
-.boot-line.done::after  { content: ' ✓'; color: #22c55e; }
-.boot-line.typing { color: #f59e0b; border-right-color: #f59e0b; animation: blink-cursor 0.6s step-end infinite; }
-@keyframes blink-cursor { 50% { border-right-color: transparent; } }
-.boot-bar-wrap {
-    width: 380px; height: 3px;
-    background: rgba(255,255,255,0.06); border-radius: 99px;
-    margin-top: 2rem; overflow: hidden;
-}
-.boot-bar-fill {
-    height: 100%; width: 0%; border-radius: 99px;
-    background: linear-gradient(90deg, #dc2626, #f59e0b, #00e5ff);
-    transition: width 0.3s ease;
+    pointer-events: none; z-index: 0; opacity: 0.03;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(0,229,255,1) 0px, rgba(0,229,255,1) 1px, transparent 1px, transparent 60px),
+        repeating-linear-gradient(-45deg, rgba(220,38,38,0.6) 0px, rgba(220,38,38,0.6) 1px, transparent 1px, transparent 60px);
 }
 
 /* ── Hero ── */
@@ -449,23 +407,6 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
     width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
 }
 
-/* ── Song card expander override ── */
-[data-testid="stExpander"] details summary {
-    list-style: none;
-}
-[data-testid="stExpander"] details summary::-webkit-details-marker {
-    display: none;
-}
-.song-card-summary {
-    background: linear-gradient(135deg, #0d0d1a 0%, #0a0a12 100%);
-    border-left: 3px solid;
-    border-radius: 4px;
-    padding: 0.55rem 0.7rem 0.55rem 0.8rem;
-    height: 54px;
-    display: flex; align-items: center; gap: 0.5rem;
-    overflow: hidden;
-}
-
 /* ── Candidate scores ── */
 .cand-row {
     display: flex; align-items: center; gap: 0.9rem;
@@ -648,15 +589,74 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
     color: #fef2f2; margin-top: 0.35rem; letter-spacing: 0.1em;
 }
 
-/* ── Typewriter match song ── */
-.match-song-typewriter {
+/* ── Match song name with glitch ── */
+.match-song {
     font-family: 'Orbitron', sans-serif;
     font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 900;
     color: #fef2f2; line-height: 1.15;
     text-shadow: 0 0 24px rgba(220,38,38,0.4);
-    border-right: 3px solid #f59e0b;
-    white-space: nowrap; overflow: hidden;
-    display: inline-block;
+    margin: 0.3rem 0;
+    animation: glitch-song 6s ease-in-out infinite;
+    position: relative;
+}
+@keyframes glitch-song {
+    0%, 85%, 100% { text-shadow: 0 0 24px rgba(220,38,38,0.4); transform: none; }
+    87%  { text-shadow: 3px 0 0 rgba(0,229,255,0.7), -3px 0 0 rgba(220,38,38,0.7); transform: skewX(-1deg); }
+    89%  { text-shadow: -2px 0 0 rgba(0,229,255,0.7), 2px 0 0 rgba(220,38,38,0.7); transform: skewX(1deg); }
+    91%  { text-shadow: 0 0 24px rgba(220,38,38,0.4); transform: none; }
+}
+
+/* ── Circular confidence gauge ── */
+.gauge-wrap {
+    display: flex; align-items: center; gap: 1.5rem; margin-top: 1rem;
+}
+.gauge-svg { flex-shrink: 0; }
+.gauge-info { flex: 1; }
+.gauge-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.22em; color: #00e5ff; text-transform: uppercase;
+    margin-bottom: 0.3rem;
+}
+.gauge-pct {
+    font-family: 'Orbitron', sans-serif; font-size: 1.8rem;
+    font-weight: 900; color: #fef2f2; line-height: 1;
+}
+.gauge-sub {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+    color: #57534e; margin-top: 0.2rem; letter-spacing: 0.1em;
+}
+
+/* ── Waveform equalizer ── */
+.waveform-wrap {
+    display: flex; align-items: center; justify-content: center;
+    gap: 3px; height: 48px; margin: 1rem 0;
+}
+.waveform-bar {
+    width: 4px; border-radius: 2px;
+    background: linear-gradient(180deg, #00e5ff, #0891b2);
+    box-shadow: 0 0 6px rgba(0,229,255,0.5);
+    animation: eq-bounce var(--d, 0.8s) ease-in-out infinite alternate;
+    transform-origin: bottom;
+}
+@keyframes eq-bounce {
+    from { transform: scaleY(0.15); opacity: 0.4; }
+    to   { transform: scaleY(1);    opacity: 1; }
+}
+.waveform-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.25em; color: #00e5ff; text-align: center;
+    text-transform: uppercase; margin-bottom: 0.3rem;
+    animation: blink-await 1s step-end infinite;
+}
+
+/* ── Scanning animation ── */
+.scanning-wrap {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.75rem;
+    color: #f59e0b; letter-spacing: 0.2em; text-transform: uppercase;
+    margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;
+}
+.scanning-cursor {
+    animation: blink-await 0.6s step-end infinite;
 }
 
 /* ── Status bar ── */
@@ -687,53 +687,15 @@ button[data-baseweb="tab"][aria-selected="true"] { color: #f59e0b !important; }
 """, unsafe_allow_html=True)
 
 
-# ─── Boot sequence + ambient effects ──────────────────────────────────────────
-# Boot screen is only emitted into the page on the very first run of this
-# session (tracked via st.session_state, which is reliable Python-side state —
-# unlike sessionStorage/getElementById, which can fail to reach elements that
-# Streamlit renders into a sandboxed iframe). On reruns we skip the boot block
-# entirely, so it never re-plays and never gets "stuck" waiting on JS that
-# can't find its target element.
-
-if "jarvis_booted" not in st.session_state:
-    st.session_state.jarvis_booted = True
-    st.markdown("""
-    <div id="boot-screen">
-        <div class="boot-logo"><span>J</span>.A.R.V.I.S</div>
-        <div class="boot-sub">STARK INDUSTRIES · AUDIO IDENTIFICATION SYSTEM</div>
-        <div class="boot-lines">
-            <div class="boot-line" id="bl0">INITIALIZING AUDIO CORE</div>
-            <div class="boot-line" id="bl1">LOADING FINGERPRINT DATABASE</div>
-            <div class="boot-line" id="bl2">CALIBRATING FREQUENCY FILTERS</div>
-            <div class="boot-line" id="bl3">NEURAL PATTERN MATCHING ONLINE</div>
-            <div class="boot-line" id="bl4">JARVIS SYSTEMS NOMINAL</div>
-        </div>
-        <div class="boot-bar-wrap"><div class="boot-bar-fill" id="boot-bar"></div></div>
-    </div>
-
-    <script>
-    (function() {
-        var lines  = [0,1,2,3,4];
-        var delays = [400, 900, 1450, 2000, 2550];
-        var bar    = document.getElementById('boot-bar');
-        lines.forEach(function(idx) {
-            setTimeout(function() {
-                var el = document.getElementById('bl' + idx);
-                if (!el) return;
-                el.classList.add('typing');
-                setTimeout(function() {
-                    el.classList.remove('typing');
-                    el.classList.add('done');
-                }, 420);
-                if (bar) bar.style.width = ((idx + 1) / lines.length * 100) + '%';
-            }, delays[idx]);
-        });
-    })();
-    </script>
-    """, unsafe_allow_html=True)
+# ─── Ambient effects ─────────────────────────────────────────────────────────
 
 st.markdown("""
 <canvas id="hex-canvas"></canvas>
+<div class="hud-grid"></div>
+<div class="vp-corner tl"></div>
+<div class="vp-corner tr"></div>
+<div class="vp-corner bl"></div>
+<div class="vp-corner br"></div>
 
 <div class="status-bar">
     <span><span class="status-bar-dot"></span></span>
@@ -752,14 +714,14 @@ st.markdown("""
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    var HEX_R = 14, COLS, ROWS, particles = [];
+    var HEX_R = 14, particles = [];
     function hexW(r) { return Math.sqrt(3) * r; }
     function hexH(r) { return 2 * r; }
 
     function buildGrid() {
         particles = [];
-        COLS = Math.ceil(canvas.width  / (hexW(HEX_R) * 1.05)) + 2;
-        ROWS = Math.ceil(canvas.height / (hexH(HEX_R) * 0.78)) + 2;
+        var COLS = Math.ceil(canvas.width  / (hexW(HEX_R) * 1.05)) + 2;
+        var ROWS = Math.ceil(canvas.height / (hexH(HEX_R) * 0.78)) + 2;
         for (var r = 0; r < ROWS; r++) {
             for (var c = 0; c < COLS; c++) {
                 var x = c * hexW(HEX_R) * 1.05 + (r % 2) * hexW(HEX_R) * 0.525;
@@ -1194,7 +1156,9 @@ def plot_offset_histogram(offset_hist: dict, winner: str):
 def sec_hdr(label: str):
     st.markdown(f"""
     <div class="sec-hdr">
+        <div class="sec-hdr-bracket">⌐</div>
         <div class="sec-hdr-text">{label}</div>
+        <div class="sec-hdr-bracket">¬</div>
         <div class="sec-hdr-line"></div>
     </div>""", unsafe_allow_html=True)
 
@@ -1237,46 +1201,45 @@ def render_match_box(winner, scores):
         top_score = scores[0][1]
         runner_up = scores[1][1] if len(scores) > 1 else 1
         ratio     = top_score / max(runner_up, 1)
-        # confidence as % of ratio (cap at 100)
         conf_pct  = min(100, int((ratio / 10) * 100))
-        n_segs    = 20
-        active    = int(conf_pct / 100 * n_segs)
-        segs_html = ""
-        for s in range(n_segs):
-            if s < active:
-                cls = "active-low" if s < 6 else ("active-mid" if s < 13 else "active-high")
-            else:
-                cls = ""
-            segs_html += f'<div class="power-seg {cls}"></div>'
+        # circular gauge: circumference of r=28 circle = ~175.9
+        circ      = 175.9
+        dash      = conf_pct / 100 * circ
+        gap       = circ - dash
+        # colour based on confidence
+        if conf_pct >= 70:   gauge_col = "#22c55e"
+        elif conf_pct >= 40: gauge_col = "#f59e0b"
+        else:                gauge_col = "#dc2626"
         song_display = winner.replace('_', ' ')
-        uid = f"tw_{abs(hash(winner)) % 99999}"
         st.markdown(f"""
         <div class="match-box">
             <div class="match-jarvis">▲ J.A.R.V.I.S  RESPONSE</div>
             <div class="match-phrase">Found it, Boss.</div>
-            <div id="{uid}" class="match-song-typewriter"></div>
+            <div class="match-song">{song_display}</div>
             <div class="match-meta">
                 alignment score {top_score:,} &nbsp;·&nbsp; {ratio:.1f}× the runner-up
             </div>
-            <div class="power-meter-wrap">
-                <div class="power-meter-label">Confidence</div>
-                <div class="power-meter-segments">{segs_html}</div>
-                <div class="power-pct">{conf_pct}%</div>
+            <div class="gauge-wrap">
+                <svg class="gauge-svg" width="80" height="80" viewBox="0 0 80 80">
+                    <circle cx="40" cy="40" r="28" fill="none"
+                            stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+                    <circle cx="40" cy="40" r="28" fill="none"
+                            stroke="{gauge_col}" stroke-width="6"
+                            stroke-dasharray="{dash:.1f} {gap:.1f}"
+                            stroke-dashoffset="44"
+                            stroke-linecap="round"
+                            style="filter:drop-shadow(0 0 4px {gauge_col});transition:stroke-dasharray 0.6s ease;"/>
+                    <text x="40" y="44" text-anchor="middle"
+                          fill="{gauge_col}" font-family="Orbitron,sans-serif"
+                          font-size="13" font-weight="900">{conf_pct}%</text>
+                </svg>
+                <div class="gauge-info">
+                    <div class="gauge-label">Signal Confidence</div>
+                    <div class="gauge-pct" style="color:{gauge_col};">{conf_pct}%</div>
+                    <div class="gauge-sub">HASH ALIGNMENT RATIO {ratio:.1f}×</div>
+                </div>
             </div>
-        </div>
-        <script>
-        (function(){{
-            var el = document.getElementById("{uid}");
-            if (!el) return;
-            var txt = "{song_display}";
-            var i = 0;
-            el.textContent = "";
-            var t = setInterval(function(){{
-                if (i < txt.length) {{ el.textContent += txt[i++]; }}
-                else {{ clearInterval(t); el.style.borderRight = "none"; }}
-            }}, 60);
-        }})();
-        </script>""", unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="no-match-box">
@@ -1317,21 +1280,18 @@ def tab_library(db_paired, db_constellation):
                 <div class="reactor-segments">
                     <svg viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
                         <g transform="translate(45,45)">
-                            <!-- 6 triangle segments -->
                             <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8"/>
                             <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(60)"/>
                             <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(120)"/>
                             <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(180)"/>
                             <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(240)"/>
                             <path d="M0,-38 L8,-20 L-8,-20 Z" fill="rgba(220,38,38,0.35)" stroke="#dc2626" stroke-width="0.8" transform="rotate(300)"/>
-                            <!-- outer ring -->
                             <circle r="38" fill="none" stroke="rgba(220,38,38,0.4)" stroke-width="1"/>
                             <circle r="28" fill="none" stroke="rgba(245,158,11,0.2)" stroke-width="0.5" stroke-dasharray="4 4"/>
                         </g>
                     </svg>
                 </div>
                 <div class="reactor-inner-ring"></div>
-                <!-- arc sparks at 4 positions -->
                 <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(0deg) translateY(-34px);animation-delay:0s;"></div>
                 <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(90deg) translateY(-34px);animation-delay:1.2s;"></div>
                 <div class="arc-spark" style="bottom:50%;left:calc(50% - 1px);transform-origin:bottom center;transform:translateY(50%) rotate(180deg) translateY(-34px);animation-delay:2.4s;"></div>
@@ -1340,7 +1300,6 @@ def tab_library(db_paired, db_constellation):
             </div>
         </div>
         <div class="reactor-readout">ARC REACTOR · OUTPUT: 3.00 GJ · STABLE</div>
-        <div class="hero-eyebrow" style="margin-top:0.8rem;">EE200 · Signals, Systems &amp; Networks · Course Project</div>
         <div class="hero-title"><span class="j">J</span>.A.R.V.I.S</div>
         <div class="hero-acronym">Just A Rather Very Intelligent Sound-identifier</div>
         <div class="hero-tagline">"JARVIS, identify that track."</div>
@@ -1368,13 +1327,13 @@ def tab_library(db_paired, db_constellation):
         )
     with c3:
         st.markdown(
-            f'<div class="metric-card"><div class="metric-val">{SR//1000}k Hz</div>'
+            f'<div class="metric-card"><div class="metric-val">9.6 kHz</div>'
             f'<div class="metric-lbl">Sample Rate</div></div>',
             unsafe_allow_html=True,
         )
 
     # ── Indexed library ──────────────────────────────────────────────────────
-    sec_hdr("⟁ Indexed library — click a track to inspect its constellation")
+    sec_hdr("⟁ Indexed library — expand a track to inspect its constellation")
 
     cols = st.columns(4)
     for i, (name, n_hash) in enumerate(songs):
@@ -1383,17 +1342,8 @@ def tab_library(db_paired, db_constellation):
         has_data   = bool(peaks_list)
         dot_color  = "#22c55e" if has_data else "#3f3f46"
         disp_name  = name.replace('_', ' ')
-        label = (
-            f'<div class="song-card-summary" style="border-left-color:{color};">'
-            f'<span class="song-card-idx">#{i+1:03d}</span>'
-            f'<span class="song-card-dot" style="background:{dot_color};'
-            f'box-shadow:0 0 6px {dot_color};"></span>'
-            f'<span class="song-card-name">{disp_name}</span>'
-            f'</div>'
-        )
         with cols[i % 4]:
-            st.markdown(label, unsafe_allow_html=True)
-            with st.expander("show constellation", expanded=False):
+            with st.expander(f"#{i+1:03d}  {disp_name}", expanded=False):
                 st.markdown(
                     f'<div class="song-meta" style="color:{color};">'
                     f'{n_hash:,} hashes &nbsp;·&nbsp; '
@@ -1427,35 +1377,50 @@ def tab_identify(db_paired, db_constellation):
 
     st.markdown("""
     <div class="page-hdr">
-        <div class="page-hdr-title">⚡ Identify a Track</div>
-        <div class="page-hdr-sub">UPLOAD A CLIP · JARVIS WILL FIND IT</div>
+        <div class="page-hdr-title">Identify a Track</div>
+        <div class="page-hdr-sub">UPLOAD AUDIO SIGNATURE · JARVIS WILL FIND IT</div>
     </div>""", unsafe_allow_html=True)
 
-    st.markdown('<div class="hud-uploader-wrap">'
-                '<div class="hud-corner-tr"></div>'
-                '<div class="hud-corner-bl"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="position:relative;padding:0.8rem;background:rgba(0,229,255,0.015);border:1px solid rgba(0,229,255,0.12);border-radius:4px;"><div class="hud-corner-tr"></div><div class="hud-corner-bl"></div>', unsafe_allow_html=True)
     uploaded = st.file_uploader(
-        "Drop a clip here",
+        "Upload Audio Signature",
         type=["wav", "mp3", "flac", "ogg", "m4a"],
         label_visibility="collapsed",
         key="identify_uploader",
     )
     if not uploaded:
-        st.markdown('<div class="awaiting-input">▲ AWAITING INPUT</div>', unsafe_allow_html=True)
+        st.markdown('<div class="awaiting-input">⟁ AWAITING AUDIO SIGNATURE</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Audio player — shown as soon as a file is dropped ───────────────────
+    # ── Audio player ─────────────────────────────────────────────────────────
     if uploaded:
         sec_hdr("⟁ Clip preview")
         st.audio(uploaded, format=f"audio/{uploaded.name.rsplit('.',1)[-1].lower()}")
-        uploaded.seek(0)   # reset so read() below gets the full bytes
+        uploaded.seek(0)
 
-    run = st.button("⚡ IDENTIFY", type="primary", use_container_width=True)
+    run = st.button("IDENTIFY", type="primary", use_container_width=True)
 
     if not (uploaded and run):
         return
 
-    with st.spinner("Scanning frequency signature…"):
+    # mark that we just ran identify so we stay on this tab
+    st.session_state["_active_tab"] = "identify"
+
+    # ── Waveform equalizer while scanning ────────────────────────────────────
+    import random
+    bars_html = ""
+    for b in range(32):
+        delay = round(random.uniform(0, 1.2), 2)
+        dur   = round(random.uniform(0.4, 1.0), 2)
+        h     = random.randint(20, 100)
+        bars_html += f'<div class="waveform-bar" style="height:{h}%;--d:{dur}s;animation-delay:{delay}s;"></div>'
+
+    st.markdown(f"""
+    <div class="waveform-label">⟁ SCANNING AUDIO SIGNATURE</div>
+    <div class="waveform-wrap">{bars_html}</div>
+    """, unsafe_allow_html=True)
+
+    with st.spinner(""):
         try:
             raw    = uploaded.read()
             audio  = read_audio_bytes(raw, uploaded.name)
@@ -1477,7 +1442,8 @@ def tab_identify(db_paired, db_constellation):
     plt.close(fig1)
     st.markdown(
         f'<div class="hash-info">→ {result["n_hashes"]:,} paired hashes '
-        f'generated from {len(result["peaks"])} constellation peaks</div>',
+        f'generated from {len(result["peaks"])} constellation peaks &nbsp;·&nbsp; '
+        f'<span style="color:#f59e0b;">{len(result["peaks"])} peaks in query clip</span></div>',
         unsafe_allow_html=True,
     )
 
@@ -1541,8 +1507,8 @@ def tab_identify(db_paired, db_constellation):
 def tab_batch(db_paired):
     st.markdown("""
     <div class="page-hdr">
-        <div class="page-hdr-title">⚡ Batch Identification</div>
-        <div class="page-hdr-sub">UPLOAD MULTIPLE CLIPS · GET results.csv</div>
+        <div class="page-hdr-title">Batch Identification</div>
+        <div class="page-hdr-sub">UPLOAD MULTIPLE TARGETS · GET results.csv</div>
     </div>""", unsafe_allow_html=True)
 
     st.markdown(
@@ -1554,27 +1520,22 @@ def tab_batch(db_paired):
         unsafe_allow_html=True,
     )
 
-    st.markdown('<div class="hud-uploader-wrap">'
-                '<div class="hud-corner-tr"></div>'
-                '<div class="hud-corner-bl"></div>', unsafe_allow_html=True)
     files = st.file_uploader(
-        "Drop clips here",
+        "Upload Multiple Targets",
         type=["wav", "mp3", "flac", "ogg", "m4a"],
         accept_multiple_files=True,
         label_visibility="collapsed",
         key="batch_uploader",
     )
-    if not files:
-        st.markdown('<div class="awaiting-input">▲ AWAITING INPUT</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
     run = st.button("▶ RUN BATCH", type="primary")
 
     if not (files and run):
         return
 
-    rows = []
-    prog = st.progress(0.0, text="Processing…")
+    rows        = []
+    all_results = []
+    prog        = st.progress(0.0, text="Processing…")
+
     for i, f in enumerate(files):
         prog.progress((i + 1) / len(files), text=f"Identifying {f.name}…")
         try:
@@ -1583,11 +1544,13 @@ def tab_batch(db_paired):
             res   = identify(audio, db_paired)
             pred  = res["winner"] if res["winner"] else "none"
             score = res["scores"][0][1] if res["scores"] else 0
-        except Exception:
-            pred, score = "none", 0
+        except Exception as e:
+            res, pred, score = None, "none", 0
         rows.append({"filename": f.name, "prediction": pred, "score": score})
+        all_results.append((f.name, res))
     prog.empty()
 
+    # ── Summary table ────────────────────────────────────────────────────────
     sec_hdr("⟁ Results")
     matched = sum(1 for r in rows if r["prediction"] != "none")
     st.markdown(
@@ -1618,6 +1581,7 @@ def tab_batch(db_paired):
     html += "</tbody></table>"
     st.markdown(html, unsafe_allow_html=True)
 
+    # ── CSV download ─────────────────────────────────────────────────────────
     csv_buf = io.StringIO()
     writer  = csv.DictWriter(csv_buf, fieldnames=["filename", "prediction"])
     writer.writeheader()
@@ -1631,6 +1595,90 @@ def tab_batch(db_paired):
         file_name="results.csv",
         mime="text/csv",
     )
+
+    # ── Per-clip intermediate steps ──────────────────────────────────────────
+    sec_hdr("⟁ Per-clip analysis")
+    counts       = get_song_hash_counts(db_paired)
+    sorted_names = sorted(counts.keys())
+
+    for fname, res in all_results:
+        if res is None:
+            st.markdown(
+                f'<div class="hash-info" style="color:#dc2626;">⚠ {fname} — failed to process</div>',
+                unsafe_allow_html=True,
+            )
+            continue
+
+        winner = res["winner"]
+        scores = res["scores"]
+        label  = winner.replace("_", " ") if winner else "NO MATCH"
+        color  = "#f59e0b" if winner else "#57534e"
+
+        with st.expander(f"▶  {fname}  ·  {label}", expanded=False):
+
+            # verdict chip
+            render_match_box(winner, scores)
+
+            # step 1 — spectrogram + constellation
+            step_hdr("1", "Spectrogram → Constellation",
+                     "Time-frequency map, then top peaks kept as fingerprint")
+            fig1 = plot_query_analysis(
+                res["freqs"], res["times"], res["Sxx_dB"], res["peaks"]
+            )
+            st.pyplot(fig1, use_container_width=True)
+            plt.close(fig1)
+            st.markdown(
+                f'<div class="hash-info">→ {res["n_hashes"]:,} paired hashes '
+                f'from {len(res["peaks"])} peaks &nbsp;·&nbsp; '
+                f'<span style="color:#f59e0b;">{len(res["peaks"])} peaks in query clip</span></div>',
+                unsafe_allow_html=True,
+            )
+
+            # step 2 — candidate scores
+            render_candidates(scores, winner)
+
+            # step 3 — where in the song
+            if winner:
+                hop_s      = (NPERSEG - NOVERLAP) / SR
+                w_color    = song_color(winner, sorted_names)
+                peaks_list = db_paired  # placeholder — we use db_constellation below
+
+                step_hdr("2", "Where in the Song?",
+                         f"Full constellation of '{label}' with query window highlighted")
+
+                # we need db_constellation — pass it through session state
+                db_constellation = st.session_state.get("_db_constellation", {})
+                peaks_list = db_constellation.get(winner, [])
+
+                if peaks_list and res["matched_offset"] is not None:
+                    win_start = res["matched_offset"] * hop_s
+                    win_end   = win_start + res["query_n_frames"] * hop_s
+                    fig2 = plot_song_window(
+                        peaks_list, label, w_color,
+                        highlight_start_s=win_start, highlight_end_s=win_end,
+                    )
+                    if fig2:
+                        st.pyplot(fig2, use_container_width=True)
+                        plt.close(fig2)
+                    st.markdown(
+                        f'<div class="hash-info" style="color:#f59e0b;">'
+                        f'⟁ Clip matched from <b>{label}</b>'
+                        f' &nbsp;·&nbsp; {win_start:.2f}s → {win_end:.2f}s</div>',
+                        unsafe_allow_html=True,
+                    )
+
+            # step 4 — offset histogram
+            if res["offset_hist"]:
+                step_hdr("3", "Alignment Spike",
+                         "Hash votes converge on the matching time offset")
+                fig3 = plot_offset_histogram(res["offset_hist"], winner)
+                if fig3:
+                    st.pyplot(fig3, use_container_width=True)
+                    plt.close(fig3)
+
+            # timing
+            sec_hdr("⟁ Processing time")
+            render_timing(res["timing"])
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
@@ -1647,7 +1695,26 @@ def main():
         )
         return
 
+    # store for batch tab access
+    st.session_state["_db_constellation"] = db_constellation
+
+    # Tab persistence — default to 0 (DATABASE), switch to 1 (IDENTIFY) after a run
+    active = 0
+    if st.session_state.get("_active_tab") == "identify":
+        active = 1
+        st.session_state["_active_tab"] = None
+
     tab1, tab2, tab3 = st.tabs(["  DATABASE  ", "  IDENTIFY  ", "  BATCH  "])
+
+    # Force the active tab via JS
+    if active == 1:
+        st.markdown("""
+        <script>
+        (function() {
+            var tabs = window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+            if (tabs && tabs[1]) { tabs[1].click(); }
+        })();
+        </script>""", unsafe_allow_html=True)
 
     with tab1:
         tab_library(db_paired, db_constellation)
